@@ -19,26 +19,28 @@ import json
 
 # %%
 class Bar:
-    def __init__(self, graph, cocktails):
+    def __init__(self, graph, cocktails, ingredients):
         self.graph = graph
         self.cocktails = cocktails
-        self.ingredients = None
+        self.ingredients = ingredients
 
     @classmethod
     def from_json(cls, path):
-        with open('/Users/alessiogandelli/dev/internship/climate-networks/models/drink.json') as f: # open file
+        with open(path) as f: # open file
             data = json.load(f) 
         
         cocktails = [] #
         edges = []
+        ingredients = []
 
         for cock in data:
             cocktails.append(cock['name'])
             for i in cock['ingredients']:
+                ingredients.append(i['ingredient'])
                 edges.append((cock['name'], i['ingredient']))
 
 
-        gg = nx.Graph()
+        gg = nx.DiGraph()
 
         gg.add_nodes_from(cocktails, bipartite = 0)
         gg.add_edges_from(edges)
@@ -50,7 +52,7 @@ class Bar:
                 gg.nodes[i]['bipartite'] = 1
                 gg.nodes[i]['stock'] = 1
 
-        return cls(gg, cocktails)
+        return cls(gg, cocktails, ingredients)
 
 
     def plot_graph(self):
@@ -71,4 +73,13 @@ class Bar:
                     total = total * g.nodes[e[1]]['stock']
                 if total == 1:
                     print(n)
+
+    def get_ingredients(self, cocktails):
+        nodes_to_include = set(cocktails)
+
+        for ingredient in cocktails:
+            if ingredient in self.graph:
+                nodes_to_include.update(self.graph.neighbors(ingredient))
+        
+        return nodes_to_include
 # %%
